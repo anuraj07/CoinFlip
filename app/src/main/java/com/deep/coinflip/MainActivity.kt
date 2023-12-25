@@ -3,6 +3,7 @@ package com.deep.coinflip
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,10 +35,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.deep.coinflip.ui.theme.BlueCustom
@@ -46,9 +47,7 @@ import com.deep.coinflip.ui.theme.GoldYellow
 import com.deep.coinflip.ui.theme.GrayBackground
 import com.deep.coinflip.ui.theme.Yellow
 import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.util.Random
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -60,7 +59,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    MainScreen()
+                    val viewModel: MainViewModel by viewModels()
+                    MainScreen(viewModel)
                 }
             }
         }
@@ -68,7 +68,8 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun MainScreen() {
+fun MainScreen(viewModel: MainViewModel) {
+    val context = LocalContext.current
     var coinState by remember { mutableStateOf(CoinState.Heads) }
     Box(
         modifier = Modifier
@@ -106,9 +107,10 @@ fun MainScreen() {
                 Row(modifier = Modifier.padding(bottom = 12.dp)) {
                     Button(
                         onClick = {
-                                  coinState = CoinState.Rotating
+                            viewModel.playSound(context)
+                            coinState = CoinState.Rotating
                             GlobalScope.launch {
-                                coinState = getCoinValue()
+                                coinState = viewModel.getCoinValue()
                             }
                         },
                         shape = RoundedCornerShape(8.dp),
@@ -165,15 +167,6 @@ fun Coin(coinFace: String?) {
     }
 }
 
-suspend fun getCoinValue(): CoinState {
-    delay(3000)
-    return if(Random().nextBoolean()) {
-        CoinState.Heads
-    } else {
-        CoinState.Tails
-    }
-}
-
 @Composable
 fun RotatingCoin() {
     Coin(coinFace = null)
@@ -187,12 +180,4 @@ fun HeadCoin() {
 @Composable
 fun TailCoin() {
     Coin(coinFace = "Tails")
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    CoinFlipTheme {
-        MainScreen()
-    }
 }
